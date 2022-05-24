@@ -29,3 +29,6 @@
 
     - 주문 취소 요구 사항 : 주문을 취소하면 주문 상태 변경, 주문 할 때 감소했던 주문의 재고를 복구
     - 주문 취소 로직 -> 현재 로그인한 사용자와 주문 데이터를 생성한 사용자가 같은지 유효성 검사
+
+* Junit을 이용해 주문 테스트와 주문 취소 테스트 완료
+  test>java>com.example.orderapisubject>service>OrderServiceTest
