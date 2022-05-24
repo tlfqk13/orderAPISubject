@@ -19,5 +19,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("select count(o) from Order o " +
             "where o.member.email = :email"
     )
-    Long countOrder(@Param("email") String email);
+    Long countOrder(@Param("email") String email); // 현재 로그인한 회원의 주문 개수가 몇 개인지 조회합니다.
 }

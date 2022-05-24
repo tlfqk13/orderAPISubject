@@ -1,6 +1,8 @@
 package com.example.orderapisubject.service;
 
 import com.example.orderapisubject.dto.OrderDto;
+import com.example.orderapisubject.dto.OrderHistDto;
+import com.example.orderapisubject.dto.OrderItemDto;
 import com.example.orderapisubject.entity.Item;
 import com.example.orderapisubject.entity.Member;
 import com.example.orderapisubject.entity.Order;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.thymeleaf.util.StringUtils;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
@@ -41,4 +44,46 @@ public class OrderService {
 
         return order.getId();
     }
+
+    @Transactional(readOnly = true)
+    public Page<OrderHistDto> getOrderList(String email, Pageable pageable){
+
+        List<Order> orders = orderRepository.findOrders(email,pageable); // 유저의 아이디와  페이징 조건을 이용하여 주문 목록을 조회
+        Long totalCount = orderRepository.countOrder(email); // 유저의 총 주문 갯수
+
+        List<OrderHistDto> orderHistDtos = new ArrayList<>();
+
+        for(Order order : orders){ // 주문 리스트를 돌면서 구매 이력 페이지에 전달할 DTO 생성
+            OrderHistDto orderHistDto = new OrderHistDto(order);
+            List<OrderItem> orderItems = order.getOrderItems();
+            for(OrderItem orderItem : orderItems){
+                OrderItemDto orderItemDto = new OrderItemDto(orderItem);
+                orderHistDto.addOrderItemDto(orderItemDto);
+            }
+            orderHistDtos.add(orderHistDto);
+        }
+
+        return new PageImpl<OrderHistDto>(orderHistDtos,pageable,totalCount);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean validateOrder(Long orderId, String email){ // 현재 로그인한 사용자와 주문 데이터를 생성한 사용자가 같은지 검사
+        Member curMember = memberRepository.findByEmail(email);
+        Order order = orderRepository.findById(orderId).orElseThrow(EntityNotFoundException::new);
+        Member savedMember = order.getMember();
+
+        if(!StringUtils.equals(curMember.getEmail(),savedMember.getEmail())){
+            return false;
+        }
+
+        return true;
+    }
+
+    public void cancelOrder(Long orderId){
+        Order order = orderRepository.findById(orderId).orElseThrow(EntityNotFoundException::new);
+        order.cancelOrder();
+    }
+
+
+
 }
